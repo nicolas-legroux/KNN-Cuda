@@ -13,7 +13,7 @@
 
 #include "configuration.h"
 #include "CPU/cpu_knn.h"
-#include "GPU/gpu_knn.h"
+#include "GPU/compute_distances.h"
 #include "utilities.h"
 
 void compute_benchmark() {

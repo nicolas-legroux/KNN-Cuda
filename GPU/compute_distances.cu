@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../configuration.h"
-#include "gpu_knn.h"
+#include "compute_distances.h"
 
 const int blocksize = 16;
 

@@ -4,10 +4,10 @@
 #include <sstream>
 #include "dataLoader.h"
 #include <math.h>
-#include "configuration.h"
+#include "../configuration.h"
 
-#include "CPU/cpu_knn.h"
-#include "GPU/gpu_knn.h"
+#include "../CPU/cpu_knn.h"
+#include "../GPU/compute_distances.h"
 
 #include "dataSplitter.h"
 
