@@ -10,8 +10,6 @@
 
 #include <string>
 
-using namespace std;
-
-void loadData(string filename, int * cdata, int * data);
+void loadData(std::string filename, int * cdata, double * data);
 
 #endif /* DATALOADER_H_ */

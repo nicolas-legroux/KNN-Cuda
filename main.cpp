@@ -10,9 +10,10 @@
 #include <stdio.h>
 
 #include "GPU/bitonic_sort.h"
+#include "GPU/oddeven_sort_indexes.h"
 
 int main(){
-	test_bitonic_sort();
+	test_oddeven_sort();
 	return 0;
 }
 

@@ -14,6 +14,7 @@
 /* Every thread gets exactly one value in the unsorted array. */
 #define THREADS 512 // 2^9
 #define BLOCKS 32768 // 2^15
+
 #define NUM_VALS THREADS*BLOCKS
 
 
@@ -48,15 +49,21 @@ __global__ void bitonic_sort_step(double *dev_values, int j, int k) {
 /**
  * Inplace bitonic sort using CUDA.
  */
-void bitonic_sort(double *values) {
+void bitonic_sort(double *values, int n) {
 	double *dev_values;
-	size_t size = NUM_VALS * sizeof(double);
+	size_t size = n * sizeof(double);
+
+	int nbthreads = THREADS;
+	int nbblocks = n/nbthreads;
+
+	if(n%nbthreads != 0)
+		nbblocks++;
 
 	cudaMalloc((void**) &dev_values, size);
 	cudaMemcpy(dev_values, values, size, cudaMemcpyHostToDevice);
 
-	dim3 blocks(BLOCKS, 1); /* Number of blocks */
-	dim3 threads(THREADS, 1); /* Number of threads */
+	dim3 blocks(nbblocks, 1); /* Number of blocks */
+	dim3 threads(nbthreads, 1); /* Number of threads */
 
 	int j, k;
 	/* Major step */
@@ -77,7 +84,7 @@ void test_bitonic_sort() {
 	array_fill(values, NUM_VALS);
 
 	start = clock();
-	bitonic_sort(values); /* Inplace */
+	bitonic_sort(values, NUM_VALS); /* Inplace */
 	stop = clock();
 
 	print_elapsed(start, stop);
