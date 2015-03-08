@@ -27,6 +27,7 @@ void array_fill(double *arr, int length);
 void array_copy(double *original, double* copy, int length);
 void print_vectors_in_column_major_order(double *data, int n, int dim);
 void print_vectors_in_row_major_order(double *data, int n, int dim);
+void print_vectors_in_row_major_order(int *data, int n, int dim);
 void convert_row_major_to_column_major(double *data, int n, int dim);
 int multiple_of_32(int n);
 

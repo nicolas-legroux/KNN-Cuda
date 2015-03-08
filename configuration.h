@@ -9,9 +9,7 @@
 #define CONFIGURATION_H_
 
 
-#define DIM 1000
-#define N 10
-#define K 6
+
 
 #define NLEARN 1000
 

@@ -84,6 +84,22 @@ void print_vectors_in_row_major_order(double *data, int n, int dim){
 	}
 }
 
+void print_vectors_in_row_major_order(int *data, int n, int dim){
+
+	printf("\nThere are %d vectors, each of which is of dimension %d.\n", n, dim);
+
+	for(int i=0; i<n; i++){
+
+		printf("\nNow printing vector #%d \n[ ", (i+1));
+
+		for(int j=0; j<dim; j++){
+			printf("%d ",data[i*dim+j]);
+		}
+
+		printf("]\n");
+	}
+}
+
 void convert_row_major_to_column_major(double *data, int n, int dim){
 	double * copy = new double[n*dim];
 
