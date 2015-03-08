@@ -16,7 +16,7 @@
 #include "GPU/compute_distances.h"
 #include "utilities.h"
 
-void compute_benchmark() {
+void compute_benchmark(int n, int dim) {
 
 	clock_t start, stop;
 
@@ -24,11 +24,11 @@ void compute_benchmark() {
 
 	srand(time(NULL));
 
-	double * data = new double[DIM * N];
-	array_fill(data, DIM*N);
+	double * data = new double[n*dim];
+	array_fill(data, n*dim);
 
-	double * point = new double[DIM];
-	array_fill(point, DIM);
+	double * point = new double[dim];
+	array_fill(point, dim);
 
 	//printf("\nDATA ARRAY : \n");
 	//array_print(data, DIM * N);
@@ -36,12 +36,12 @@ void compute_benchmark() {
 	//printf("\nPOINT ARRAY : \n");
 	//array_print(point, DIM);
 
-	double * distance_simple = new double[N];
-	double * distance_withreduction = new double[N];
+	double * distance_simple = new double[n];
+	double * distance_withreduction = new double[n];
 
 	start = clock();
 	for (int i = 0; i < ITERATION; i++) {
-		gpu_compute_distance(data, point, distance_simple);
+		gpu_compute_distance(data, point, n, dim, distance_simple);
 		//printf("Done with pass %d\n", i);
 	}
 	stop = clock();
@@ -51,7 +51,7 @@ void compute_benchmark() {
 
 	start = clock();
 	for (int i = 0; i < ITERATION; i++) {
-		gpu_compute_distance_withreduction(data, point, distance_withreduction);
+		gpu_compute_distance_withreduction(data, point, n, dim, distance_withreduction);
 		//printf("Done with pass %d\n", i);
 	}
 	stop = clock();

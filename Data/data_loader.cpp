@@ -11,7 +11,9 @@
 
 #include "dataSplitter.h"
 
-void loadData(string filename, int * cdata, double * data) {
+using namespace std;
+
+void loadData(string filename, int * cdata, double * data, int dim) {
 	ifstream file;
 	string line;
 	string cell;
@@ -28,9 +30,9 @@ void loadData(string filename, int * cdata, double * data) {
 			cdata[i] = c;
 
 			while (getline(lineStream, cell, ',')) {
-				double d = atoi(cell.c_str());
+				double d = atof(cell.c_str());
 
-				data[DIM * i + j] = d;
+				data[dim * i + j] = d;
 				j++;
 			}
 

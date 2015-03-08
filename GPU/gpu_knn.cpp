@@ -7,6 +7,7 @@
 
 #include <ctime>
 #include "../configuration.h"
+#include "../utilities.h"
 #include "compute_distances.h"
 #include "oddeven_sort_indexes.h"
 
@@ -16,7 +17,12 @@ void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_tra
 
 	double * distances = new double[n_train*n_test];
 
+	clock_t start = clock();
 	gpu_compute_distances(train_data, test_data, n_train, n_test, dim, distances);
+	clock_t stop = clock();
+	printf("Time to compute distances : \n");
+	print_elapsed(start, stop);
+
 
 	int * indexes = new int[n_train*n_test];
 	for(int i=0; i<n_test; i++){
@@ -32,7 +38,7 @@ void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_tra
 	for(int i=0; i<n_test; i++){
 		//Reset class count
 		for(int j=0; j< n_labels; j++){
-			class_count[j] = 0.0;
+			class_count[j] = 0;
 		}
 
 		//Find the class of the k nearest neighbours
@@ -61,7 +67,7 @@ void gpu_knn_benchmark(double *train_data, double *test_data, int *train_labels,
 		int n_labels, int dim, int k, int* knn_labels){
 	clock_t start = clock();
 	gpu_knn(train_data, test_data, train_labels, n_train, n_test,
-		n_labels, dim, k, knn_labels);
+	n_labels, dim, k, knn_labels);
 	clock_t stop = clock();
 	print_elapsed(start, stop);
 }

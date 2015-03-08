@@ -180,10 +180,7 @@ void test_oddeven_sort(int DATA_SIZE){
 	printf("\n");
 }
 
-void test_oddeven_sort_multiple(){
-
-	int n_train = 50;
-	int n_test = 3;
+void test_oddeven_sort_multiple(int n_train, int n_test){
 
 	double * distances = new double[n_train*n_test];
 	int * indexes = new int[n_train*n_test];

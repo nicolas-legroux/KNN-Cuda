@@ -23,10 +23,31 @@ double random_double() {
 	return (double) rand() / (double) RAND_MAX;
 }
 
+int random_boolean(){
+	if(random_double()>0.7)
+		return 0;
+	else
+		return 1;
+}
+
 void array_print(double *arr, int length) {
 	int i;
 	for (i = 0; i < length; ++i) {
 		printf("%1.5f ", arr[i]);
+	}
+	printf("\n");
+}
+
+void array_fill_boolean(int * arr, int length){
+	for(int i=0; i < length; i++){
+		arr[i] = random_boolean();
+	}
+}
+
+void array_print(int *arr, int length) {
+	int i;
+	for (i = 0; i < length; ++i) {
+		printf("%d ", arr[i]);
 	}
 	printf("\n");
 }
