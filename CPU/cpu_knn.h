@@ -11,10 +11,13 @@
 #import "../configuration.h"
 
 
-float findWorstDistance(const int (&point)[DIM], const int (&knn)[K][DIM]);
-float distance(const int (&p1)[DIM], const int (&p2)[DIM]);
-void injectPoint(const int (&point)[DIM], const int (&newNeighbor)[DIM], int (&knn)[K][DIM], int (&cknn)[K], int c);
+double distance(double * p1, double * data, int idx, int dim);
 
-int cpu_knn(int * cdata_c, int * data_c, int * point_c, int nclass);
+void cpu_knn(double * train_data, double * test_data, double * train_labels,
+		int n_train, int n_test, int n_labels, int dim, int k, int * knn_labels);
+void cpu_knn_benchmark(double * train_data, double * test_data, double * train_labels,
+		int n_train, int n_test, int n_labels, int dim, int k, int * knn_labels);
 
+int find_index_min_naive(double &vector[], int dim);
+int find_index_max_naive(double &vector[], int dim);
 #endif /* CPU_KNN_H_ */

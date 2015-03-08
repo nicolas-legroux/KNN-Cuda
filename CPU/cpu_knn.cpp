@@ -6,105 +6,82 @@
  */
 
 #import "cpu_knn.h"
+#include <limits>
 
 #include <iostream>
-#import <math.h>
+#import "utilities.h"
 
 using namespace std;
 
-int cpu_knn(int * cdata_c, int * data_c, int * point_c, int nclass) {
+
+#import <math.h>
 
 
-	int cdata[NLEARN];
-	int data[NLEARN][DIM];
+int cpu_knn(double * train_data, double * test_data, double * train_labels,
+		int n_train, int n_test, int n_labels, int dim, int k, int * knn_labels) {
 
-	int knn[K][DIM];
-	int cknn[K];
+	for(int i = 0; i < n_test; i++) {
+		double distance[n_train];
 
-	int point[DIM];
+		for(int j = 0; j < n_train; j++)
+			distance[i] = distance(train_data, test_data, j, i, dim);
 
-	//Converting
+		int labelsCount[n_labels];
+		for(int i = 0; i < n_labels; i++)
+			labelsCount[i] = 0;
 
-	for(int j = 0; j < DIM; j++)
-		point[j] = point_c[j];
+		for(int ik = 0; ik < k; ik++) {
+			int idxmin = find_index_min_naive(distance, n_train);
+			labelsCount[train_labels[idxmin]]++;
+			distance[idxmin] = numeric_limits<double>::max();
+		}
 
-	for(int i = 0; i < NLEARN; i++)
-		for(int j = 0; j < DIM; j++)
-			data[i][j] = data_c[i * DIM  + j];
-
-
-	for(int i = 0; i < NLEARN; i++)
-			cdata[i] = cdata_c[i];
-
-	//Done converting
-	for(int i = 0; i < K; i++) {
-		for(int j = 0; j < DIM; j++)
-			knn[i][j] = data[i][j];
-		cknn[i] = cdata[i];
+		knn_labels[i] = find_index_max_naive(labelsCount, n_labels);
 	}
 
-	float worstDistance = findWorstDistance(point, knn);
-
-	for(int j = 0; j < NLEARN; j++) {
-		if(distance(data[j],point) < worstDistance) {
-			injectPoint(point, data[j], knn, cknn, cdata[j]);
-		}
-	}
-
-	int pointperclass[nclass];
-
-	for(int i = 0; i < nclass; i++)
-		pointperclass[i] = 0;
-
-	for(int i =0; i < K; i++)
-		pointperclass[cknn[i]]++;
-
-	int cmax = 0;
-	int c = 0;
-
-	for(int i = 0; i < nclass; i++)
-		if(pointperclass[i] > cmax) {
-			cmax = pointperclass[i];
-			c = i;
-		}
-
-	return c;
 }
 
-void injectPoint(const int (&point)[DIM], const int (&newNeighbor)[DIM], int (&knn)[K][DIM], int (&cknn)[K], int c) {
-	float worst = 0;
-	int iworst;
+void cpu_knn_benchmark(double * train_data, double * test_data, double * train_labels,
+		int n_train, int n_test, int n_labels, int dim, int k, int * knn_labels) {
+	clock_t start = clock();
+	cpu_knn(train_data, test_data, train_labels, n_train, n_test, n_labels, dim, k, knn_labels);
+	clock_t stop = clock;
 
-	for(int i = 0; i < K; i++)
-		if(worst < distance(point, knn[i])) {
-			worst = distance(point, knn[i]);
-			iworst = i;
-		}
-
-	for(int j = 0; j < DIM; j++)
-		knn[iworst][j] = newNeighbor[j];
-
-	cknn[iworst] = c;
+	print_elapsed(start, stop);
 }
 
-float findWorstDistance(const int (&point)[DIM], const int (&knn)[K][DIM]) {
-	float worst = 0;
-	for(int i = 0; i < K; i++)
-		if(worst < distance(point, knn[i]))
-			worst = distance(point, knn[i]);
-
-	return worst;
-}
-
-float distance(const int (&p1)[DIM], const int (&p2)[DIM]) {
+//Compute distance between point p1 and the point at index idx of the 2D array data
+double distance(double * matrix1, double * matrix2, int idx1, int idx2, int dim) {
 	int d = 0;
 
-	for(int i = 0; i<DIM; i++){
-
-
-		d += abs(p1[i] - p2[i]);
-	}
+	for(int i = 0; i<dim; i++)
+		d += abs(matrix1[idx1 * dim + i] - matrix2[idx2 * dim + i]);
 
 	return d;
 }
 
+int find_index_min_naive(double &vector[], int dim) {
+	int imin = 0;
+	int min = vector[0];
+	for(int i = 1; i < dim; i++) {
+		if(min > vector[i]) {
+			imin = i;
+			min = vector[i];
+		}
+	}
+
+	return imin;
+}
+
+int find_index_max_naive(int &vector[], int dim) {
+	int imax = 0;
+	int max = vector[0];
+	for(int i = 1; i < dim; i++) {
+		if(max < vector[i]) {
+			imax = i;
+			max = vector[i];
+		}
+	}
+
+	return imax;
+}
