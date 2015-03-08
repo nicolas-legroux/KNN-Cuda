@@ -8,12 +8,9 @@
 #import "cpu_knn.h"
 
 #include <iostream>
-
-using namespace std;
-
-
 #import <math.h>
 
+using namespace std;
 
 int cpu_knn(int * cdata_c, int * data_c, int * point_c, int nclass) {
 
@@ -102,8 +99,11 @@ float findWorstDistance(const int (&point)[DIM], const int (&knn)[K][DIM]) {
 float distance(const int (&p1)[DIM], const int (&p2)[DIM]) {
 	int d = 0;
 
-	for(int i = 0; i<DIM; i++)
+	for(int i = 0; i<DIM; i++){
+
+
 		d += abs(p1[i] - p2[i]);
+	}
 
 	return d;
 }

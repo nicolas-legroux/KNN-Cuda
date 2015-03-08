@@ -46,4 +46,20 @@ void array_fill(double *arr, int length) {
 	}
 }
 
+void print_vectors_in_column_major_order(double *data, int width, int height){
+
+	printf("\nThere are %d vectors, each of which is of dimension %d.\n", width, height);
+
+	for(int i=0; i<width; i++){
+
+		printf("\nNow printing vector #%d \n[ ", (i+1));
+
+		for(int j=0; j<height; j++){
+			printf("%1.5f ",data[j*width+i]);
+		}
+
+		printf("]\n");
+	}
+}
+
 
