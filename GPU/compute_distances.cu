@@ -4,7 +4,6 @@
 #include <helper_functions.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../configuration.h"
 #include "compute_distances.h"
 #include "../utilities.h"
 
@@ -12,8 +11,8 @@
 #define SIMPLE_BLOCK_SIZE 1024
 #define BLOCK_DIM 32
 
-__global__ void gpu_distance_withreduction(double* data, double* distance,
-		double* point, int n, int dim) {
+__global__ void gpu_distance_withreduction(double* data,
+		double* point, int n, int dim, double* distance) {
 
 	extern __shared__ double distComponents[];
 
@@ -21,7 +20,7 @@ __global__ void gpu_distance_withreduction(double* data, double* distance,
 	int shift_point = blockIdx.x * blockDim.y + threadIdx.y;
 	int shift_point_in_block = threadIdx.y;
 
-	if (shift_dim < DIM && shift_point < n) {
+	if (shift_dim < dim  && shift_point < n) {
 		double d = 0;
 		d = abs(data[shift_point * dim + shift_dim] - point[shift_dim]);
 		distComponents[shift_point_in_block * blockDim.y + shift_dim] = d * d;
@@ -46,8 +45,8 @@ __global__ void gpu_distance_withreduction(double* data, double* distance,
 	}
 }
 
-__global__ void gpu_distance(double* data, double* distance, double* point,
-		int n, int dim) {
+__global__ void gpu_distance(double* data, double* point,
+		int n, int dim, double* distance) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (i >= n)
@@ -68,7 +67,8 @@ __global__ void gpu_distance(double* data, double* distance, double* point,
 //GridDim.y should be equal to the number of training points
 //test_data should be stored in row-major order
 //train_data should be stored in column-major order
-__global__ void gpu_distances(double* train_data, double * test_data, int dim, int n_train, int n_test, double * distances){
+__global__ void gpu_distances(double* train_data, double * test_data, int dim,
+		int n_train, int n_test, double * distances) {
 
 	int t_idx_in_block = threadIdx.x;
 	int t_idx_global = blockDim.x * blockIdx.x + threadIdx.x;
@@ -77,21 +77,23 @@ __global__ void gpu_distances(double* train_data, double * test_data, int dim, i
 	extern __shared__ double test_data_point[];
 
 	//Load one data point into shared memory
-	if(t_idx_in_block < dim){
-		test_data_point[t_idx_in_block] = test_data[t_idy_global*dim + t_idx_in_block];
+	if (t_idx_in_block < dim) {
+		test_data_point[t_idx_in_block] = test_data[t_idy_global * dim
+				+ t_idx_in_block];
 	}
 
 	__syncthreads();
 
 	//Now compute distance
 	double dist = 0;
-	if(t_idx_global < n_train){
-		for(int i=0; i<dim; i++){
-			double temp = train_data[i * n_train + t_idx_global] - test_data_point[i];
-			dist += temp*temp;
+	if (t_idx_global < n_train) {
+		for (int i = 0; i < dim; i++) {
+			double temp = train_data[i * n_train + t_idx_global]
+					- test_data_point[i];
+			dist += temp * temp;
 		}
 
-		distances[t_idy_global*n_train + t_idx_global] = dist;
+		distances[t_idy_global * n_train + t_idx_global] = dist;
 	}
 }
 
@@ -101,34 +103,41 @@ __global__ void gpu_distances(double* train_data, double * test_data, int dim, i
  *   distance(test1, train2     ...
  *  ...																					]
  */
-void gpu_compute_distances(double *train_data, double *test_data, int n_train, int n_test, int dim, double* distances){
-	double *train_data_copy = new double[n_train*dim];
-	array_copy(train_data, train_data_copy, n_train*dim);
+void gpu_compute_distances(double *train_data, double *test_data, int n_train,
+		int n_test, int dim, double* distances) {
+	double *train_data_copy = new double[n_train * dim];
+	array_copy(train_data, train_data_copy, n_train * dim);
 	convert_row_major_to_column_major(train_data_copy, n_train, dim);
 
 	double* d_train_data;
 	double* d_test_data;
 	double* d_distances;
 
-	checkCudaErrors(cudaMalloc((void**)&d_train_data, n_train*dim*sizeof(double)));
-	checkCudaErrors(cudaMalloc((void**)&d_test_data, n_test*dim*sizeof(double)));
-	checkCudaErrors(cudaMalloc((void**)&d_distances, n_train*n_test*sizeof(double)));
+	checkCudaErrors(
+			cudaMalloc((void**)&d_train_data, n_train*dim*sizeof(double)));
+	checkCudaErrors(
+			cudaMalloc((void**)&d_test_data, n_test*dim*sizeof(double)));
+	checkCudaErrors(
+			cudaMalloc((void**)&d_distances, n_train*n_test*sizeof(double)));
 
-	checkCudaErrors(cudaMemcpy(d_train_data, train_data_copy, n_train*dim*sizeof(double), cudaMemcpyHostToDevice));
-	checkCudaErrors(cudaMemcpy(d_test_data, test_data, n_test*dim*sizeof(double), cudaMemcpyHostToDevice));
+	checkCudaErrors(
+			cudaMemcpy(d_train_data, train_data_copy, n_train*dim*sizeof(double), cudaMemcpyHostToDevice));
+	checkCudaErrors(
+			cudaMemcpy(d_test_data, test_data, n_test*dim*sizeof(double), cudaMemcpyHostToDevice));
 
 	int dim_grid_y = n_test;
 	int dim_block_x = multiple_of_32(dim);
 	int dim_block_y = 1;
-	int dim_grid_x = n_train/dim_block_x;
+	int dim_grid_x = n_train / dim_block_x;
 
-	if(n_train%dim_block_x != 0)
+	if (n_train % dim_block_x != 0)
 		dim_grid_x++;
 
 	dim3 dim_grid(dim_grid_x, dim_grid_y);
 	dim3 dim_block(dim_block_x, dim_block_y);
 
-	gpu_distances<<<dim_grid, dim_block, dim*sizeof(double)>>>(d_train_data, d_test_data, dim, n_train, n_test, d_distances);
+	gpu_distances<<<dim_grid, dim_block, dim * sizeof(double)>>>(d_train_data,
+			d_test_data, dim, n_train, n_test, d_distances);
 
 	checkCudaErrors(
 			cudaMemcpy(distances, d_distances, n_train*n_test*sizeof(double), cudaMemcpyDeviceToHost));
@@ -140,12 +149,12 @@ void gpu_compute_distances(double *train_data, double *test_data, int n_train, i
 	delete[] train_data_copy;
 }
 
-void gpu_compute_distance(double* data, double* point, double* distance) {
+void gpu_compute_distance(double* train_data, double* test_point, int n_train, int dim, double* distance) {
 
-	int datasize = N * DIM * sizeof(double);
+	int datasize = n_train * dim * sizeof(double);
 
-	int nblock = N / SIMPLE_BLOCK_SIZE;
-	if (N % SIMPLE_BLOCK_SIZE != 0)
+	int nblock = n_train / SIMPLE_BLOCK_SIZE;
+	if (n_train % SIMPLE_BLOCK_SIZE != 0)
 		nblock += 1;
 	int nthread = SIMPLE_BLOCK_SIZE;
 
@@ -157,35 +166,33 @@ void gpu_compute_distance(double* data, double* point, double* distance) {
 	printf("Block dimension : %d\n", nthread);
 
 	checkCudaErrors(cudaMalloc((void**)&d_data, datasize));
-	checkCudaErrors(cudaMalloc((void**)&d_distance, N*sizeof(double)));
-	checkCudaErrors(cudaMalloc((void**)&d_point, DIM*sizeof(double)));
+	checkCudaErrors(cudaMalloc((void**)&d_distance, n_train*sizeof(double)));
+	checkCudaErrors(cudaMalloc((void**)&d_point, dim*sizeof(double)));
 
 	checkCudaErrors(
-			cudaMemcpy(d_data, data, datasize, cudaMemcpyHostToDevice));
+			cudaMemcpy(d_data, train_data, datasize, cudaMemcpyHostToDevice));
 	checkCudaErrors(
-			cudaMemcpy(d_point, point, DIM*sizeof(double), cudaMemcpyHostToDevice));
+			cudaMemcpy(d_point, test_point, dim*sizeof(double), cudaMemcpyHostToDevice));
 
-	gpu_distance<<<nblock, nthread>>>(d_data, d_distance, d_point, N, DIM);
+	gpu_distance<<<nblock, nthread>>>(d_data, d_point, n_train, dim, d_distance);
 
 	checkCudaErrors(
-			cudaMemcpy(distance, d_distance, N*sizeof(double), cudaMemcpyDeviceToHost));
+			cudaMemcpy(distance, d_distance, n_train*sizeof(double), cudaMemcpyDeviceToHost));
 
 	checkCudaErrors(cudaFree(d_distance));
 	checkCudaErrors(cudaFree(d_data));
 	checkCudaErrors(cudaFree(d_point));
 }
 
-
-
-void gpu_compute_distance_withreduction(double* data, double* point,
+void gpu_compute_distance_withreduction(double* train_data, double* test_point, int n_train, int dim,
 		double* distance) {
-	int datasize = N * DIM * sizeof(double);
+	int datasize = n_train * dim * sizeof(double);
 
-	int block_dim_x = multiple_of_32(DIM);
+	int block_dim_x = multiple_of_32(dim);
 	int block_dim_y = MAX_THREADS_PER_BLOCK / block_dim_x;
 
-	int nblock = N / block_dim_y;
-	if (N % block_dim_y != 0)
+	int nblock = n_train / block_dim_y;
+	if (n_train % block_dim_y != 0)
 		nblock++;
 
 	dim3 dim_block(block_dim_x, block_dim_y, 1);
@@ -198,60 +205,50 @@ void gpu_compute_distance_withreduction(double* data, double* point,
 	double *d_distance;
 
 	checkCudaErrors(cudaMalloc((void**)&d_data, datasize));
-	checkCudaErrors(cudaMalloc((void**)&d_distance, N*sizeof(double)));
-	checkCudaErrors(cudaMalloc((void**)&d_point, DIM*sizeof(double)));
+	checkCudaErrors(cudaMalloc((void**)&d_distance, n_train*sizeof(double)));
+	checkCudaErrors(cudaMalloc((void**)&d_point, dim*sizeof(double)));
 
 	checkCudaErrors(
-			cudaMemcpy(d_data, data, datasize, cudaMemcpyHostToDevice));
+			cudaMemcpy(d_data, train_data, datasize, cudaMemcpyHostToDevice));
 	checkCudaErrors(
-			cudaMemcpy(d_point, point, DIM*sizeof(double), cudaMemcpyHostToDevice));
+			cudaMemcpy(d_point, test_point, dim*sizeof(double), cudaMemcpyHostToDevice));
 
 	gpu_distance_withreduction<<<nblock, dim_block,
-			block_dim_y * block_dim_x * sizeof(double)>>>(d_data, d_distance,
-			d_point, N, DIM);
+			block_dim_y * block_dim_x * sizeof(double)>>>(d_data, d_point, n_train, dim, d_distance);
 
 	checkCudaErrors(
-			cudaMemcpy(distance, d_distance, N*sizeof(double), cudaMemcpyDeviceToHost));
+			cudaMemcpy(distance, d_distance, n_train*sizeof(double), cudaMemcpyDeviceToHost));
 
 	checkCudaErrors(cudaFree(d_distance));
 	checkCudaErrors(cudaFree(d_data));
 	checkCudaErrors(cudaFree(d_point));
 }
 
-/*
+void test_distances_multiple() {
+	int n_train = 3;
+	int n_test = 4;
+	int dim = 2;
 
- int gpu_knn(int * cdata_c, int * data_c, int * point_c, int nclass) {
+	double *train_data = new double[n_train * dim];
+	double *test_data = new double[n_test * dim];
+	array_fill(train_data, n_train * dim);
+	array_fill(test_data, n_test * dim);
 
- int datasize = N * DIM * sizeof(int);
+	printf("\n-------- Printing the TRAIN data ---------\n");
+	print_vectors_in_row_major_order(train_data, n_train, dim);
 
- int nblock = N / blocksize, nthread = blocksize;
+	printf("\n-------- Printing the TEST data ---------\n");
+	print_vectors_in_row_major_order(test_data, n_test, dim);
 
- double *distance = new double[N];
+	double *distances = new double[n_train * n_test];
 
- int *d_data;
- int *d_point;
- double *d_distance;
+	gpu_compute_distances(train_data, test_data, n_train, n_test, dim,
+			distances);
 
- checkCudaErrors(cudaMalloc((void**)&d_data, datasize));
- checkCudaErrors(cudaMalloc((void**)&d_distance, N*sizeof(double)));
- checkCudaErrors(cudaMalloc((void**)&d_point, DIM*sizeof(int)));
+	printf("\n-------- Printing the DISTANCE matrix ---------\n");
+	print_vectors_in_row_major_order(distances, n_test, n_train);
+}
 
- checkCudaErrors(
- cudaMemcpy(d_data, data_c, datasize, cudaMemcpyHostToDevice));
- checkCudaErrors(
- cudaMemcpy(d_point, point_c, DIM*sizeof(int), cudaMemcpyHostToDevice));
 
- gpu_distance<<<nblock, nthread>>>(d_data, d_distance, d_point, N, DIM);
 
- checkCudaErrors(
- cudaMemcpy(distance, d_distance, N*sizeof(double), cudaMemcpyDeviceToHost));
-
- checkCudaErrors(cudaFree(d_distance));
- checkCudaErrors(cudaFree(d_data));
- checkCudaErrors(cudaFree(d_point));
-
- return -1;
- }
-
- */
 
