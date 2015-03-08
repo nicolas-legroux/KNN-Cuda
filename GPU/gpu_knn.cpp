@@ -5,6 +5,7 @@
  *      Author: nicolas.legroux
  */
 
+#include <ctime>
 #include "../configuration.h"
 #include "compute_distances.h"
 #include "oddeven_sort_indexes.h"
@@ -54,6 +55,15 @@ void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_tra
 
 	delete[] distances;
 	delete[] class_count;
+}
+
+void gpu_knn_benchmark(double *train_data, double *test_data, int *train_labels, int n_train, int n_test,
+		int n_labels, int dim, int k, int* knn_labels){
+	clock_t start = clock();
+	gpu_knn(train_data, test_data, train_labels, n_train, n_test,
+		n_labels, dim, k, knn_labels);
+	clock_t stop = clock();
+	print_elapsed(start, stop);
 }
 
 
