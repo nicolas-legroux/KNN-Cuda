@@ -16,10 +16,10 @@ int main(){
 
 	int k = 2000;
 
-	int n_train = 600000;
+	int n_train = 2;
 	int n_labels = 2;
 	int n_test = 1000;
-	int dim = 100;
+	int dim = 5;
 
 	double * train_data = new double[n_train*dim];
 	int * train_labels = new int[n_train];

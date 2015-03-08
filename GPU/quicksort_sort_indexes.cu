@@ -5,6 +5,18 @@
 #include <helper_cuda.h>
 #import "../utilities.h"
 
+
+__device__ void swap(double* data, int* indexes, int i, int j) {
+	double t = data[j];
+	data[j] = data[i];
+	data[i] = t;
+
+	int ti = indexes[j];
+	indexes[j] = indexes[i];
+	indexes[i] = ti;
+}
+
+
 /*
  * Naive sort
  * used if the quicksort uses too many levels
@@ -19,34 +31,11 @@
 				min = vj;
 			}
 		}
-		if (i != imin) {
-			int it = indexes[imin];
-			indexes[imin] = indexes[i];
-			indexes[i] = it;
-
-			data[imin] = data[i];
-			data[i] = min;
-		}
+		if (i != imin)
+			swap(data, indexes, i, imin);
 	}
 }
 
-/*
- * The idea behind that approach is that sorting an already sorted list is really fast
- * We do not need to warn the thread that the portion is already sorted
- *
- *
- * TODO : max_levels
- */
-
-__device__ void swap(double* data, int* indexes, int i, int j) {
-	double t = data[j];
-	data[j] = data[i];
-	data[i] = t;
-
-	int ti = indexes[j];
-	indexes[j] = indexes[i];
-	indexes[i] = ti;
-}
 
 __global__ void k_quicksort(double* data, int * indexes, int dim, int n) {
 	#define STACKSIZE 20
@@ -80,13 +69,16 @@ __global__ void k_quicksort(double* data, int * indexes, int dim, int n) {
 			for (int i = L; i < R; i++) {
 
 				if (data[i] < pivot) {
-					swap(data, indexes, i, pos);
+
+					if(i != pos)
+						swap(data, indexes, i, pos);
 					//printf("swaping %i and %i \n", i, pos);
 					pos++;
 				}
 			}
 
-			swap(data, indexes, pos, R);
+			if(R != pos)
+				swap(data, indexes, pos, R);
 
 			istack--;
 			if ((istack + 1) > STACKSIZE) {
@@ -118,8 +110,9 @@ __global__ void k_quicksort(double* data, int * indexes, int dim, int n) {
 void gpu_quicksort(double * data, int n, int dim) {
 
 	int * indexes = new int[n*dim];
-	for (int i = 0; i < n*dim; i++)
-		indexes[i] = i;
+	for (int i = 0; i < n; i++)
+		for(int j = 0; j < dim; j++)
+			indexes[i * dim + j] = j;
 
 	int datasize_double = dim * n * sizeof(double);
 	int datasize_int = dim * n * sizeof(int);
@@ -153,6 +146,8 @@ void gpu_quicksort(double * data, int n, int dim) {
 
 	checkCudaErrors(cudaFree(d_data));
 	checkCudaErrors(cudaFree(d_indexes));
+
+	print_vectors_in_row_major_order(indexes, n, dim);
 	printf("hello");
 }
 
@@ -160,7 +155,8 @@ void gpu_quicksort_benchmark(double * data, int n, int dim) {
 	printf("------------------------------------------\n");
 	printf("Starting benchmark for gpu quicksort (array size = %i)\n", n);
 	printf("------------------------------------------\n");
-	//print_vectors_in_row_major_order(data, n, dim);
+
+	print_vectors_in_row_major_order(data, n, dim);
 	StopWatchInterface *timer = 0;
 	sdkCreateTimer(&timer);
 	sdkStartTimer(&timer);
@@ -169,7 +165,7 @@ void gpu_quicksort_benchmark(double * data, int n, int dim) {
 
 	sdkStopTimer(&timer);
 
-	//print_vectors_in_row_major_order(data, n, dim);
+	print_vectors_in_row_major_order(data, n, dim);
 
 	printf("------------------------------------------\n");
 	printf("Sorting of array size %i done. Processing time on GPU : %f (ms)\n",
