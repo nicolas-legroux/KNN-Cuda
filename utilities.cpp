@@ -46,20 +46,64 @@ void array_fill(double *arr, int length) {
 	}
 }
 
-void print_vectors_in_column_major_order(double *data, int width, int height){
+void array_copy(double *original, double* copy, int length){
+	for(int i=0; i<length; i++){
+		copy[i] = original[i];
+	}
+}
 
-	printf("\nThere are %d vectors, each of which is of dimension %d.\n", width, height);
+void print_vectors_in_column_major_order(double *data, int n, int dim){
 
-	for(int i=0; i<width; i++){
+	printf("\nThere are %d vectors, each of which is of dimension %d.\n", n, dim);
+
+	for(int i=0; i<n; i++){
 
 		printf("\nNow printing vector #%d \n[ ", (i+1));
 
-		for(int j=0; j<height; j++){
-			printf("%1.5f ",data[j*width+i]);
+		for(int j=0; j<dim; j++){
+			printf("%1.5f ",data[j*n+i]);
 		}
 
 		printf("]\n");
 	}
 }
 
+void print_vectors_in_row_major_order(double *data, int n, int dim){
+
+	printf("\nThere are %d vectors, each of which is of dimension %d.\n", n, dim);
+
+	for(int i=0; i<n; i++){
+
+		printf("\nNow printing vector #%d \n[ ", (i+1));
+
+		for(int j=0; j<dim; j++){
+			printf("%1.5f ",data[i*dim+j]);
+		}
+
+		printf("]\n");
+	}
+}
+
+void convert_row_major_to_column_major(double *data, int n, int dim){
+	double * copy = new double[n*dim];
+
+	for(int i=0; i<n*dim; i++){
+		copy[i] = data[i];
+	}
+
+	for(int i=0; i<dim; i++){
+		for(int j=0; j<n; j++){
+			data[ i*n + j] = copy[j*dim+i];
+		}
+	}
+
+	delete[] copy;
+}
+
+int multiple_of_32(int n) {
+	if (n % 32 == 0)
+		return n;
+	else
+		return 32 * (n / 32) + 32;
+}
 
