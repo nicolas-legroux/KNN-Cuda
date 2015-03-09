@@ -10,6 +10,7 @@
 #include "../utilities.h"
 #include "compute_distances.h"
 #include "oddeven_sort_indexes.h"
+#include "extract_minimums.h"
 
 //train_data and test_data are assumed to be stored in row-major order
 void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_train, int n_test,
@@ -23,7 +24,7 @@ void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_tra
 	printf("Time to compute distances : \n");
 	print_elapsed(start, stop);
 
-
+	/*
 	int * indexes = new int[n_train*n_test];
 	for(int i=0; i<n_test; i++){
 		for(int j=0; j<n_train; j++){
@@ -32,6 +33,11 @@ void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_tra
 	}
 
 	oddeven_sort_indexes_multiple(distances, indexes, n_train, n_test);
+	*/
+
+	int * k_minimum_indexes = (int*) malloc(k*n_test*sizeof(int));
+
+	find_k_minimums(distances, n_train, n_test, k, k_minimum_indexes);
 
 	int * class_count = new int[n_labels];
 
@@ -43,7 +49,7 @@ void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_tra
 
 		//Find the class of the k nearest neighbours
 		for(int j=0; j<k; j++){
-			class_count[train_labels[indexes[i*n_train+j]]]++;
+			class_count[train_labels[k_minimum_indexes[i*k+j]]]++;
 		}
 
 		//Find the max class
@@ -61,6 +67,7 @@ void gpu_knn(double *train_data, double *test_data, int *train_labels, int n_tra
 
 	delete[] distances;
 	delete[] class_count;
+	delete[] k_minimum_indexes;
 }
 
 void gpu_knn_benchmark(double *train_data, double *test_data, int *train_labels, int n_train, int n_test,

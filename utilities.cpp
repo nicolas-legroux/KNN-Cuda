@@ -24,7 +24,7 @@ double random_double() {
 }
 
 int random_boolean(){
-	if(random_double()>0.7)
+	if(random_double()>0.5)
 		return 0;
 	else
 		return 1;

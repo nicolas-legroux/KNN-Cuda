@@ -64,7 +64,7 @@ __global__ void gpu_distance(double* data, double* point,
 
 //blockDim.x must be larger than Dim
 //BlockDim.y should be equal to one
-//GridDim.y should be equal to the number of training points
+//GridDim.y should be equal to the number of testing points
 //test_data should be stored in row-major order
 //train_data should be stored in column-major order
 __global__ void gpu_distances(double* train_data, double * test_data, int dim,
@@ -99,8 +99,8 @@ __global__ void gpu_distances(double* train_data, double * test_data, int dim,
 
 //All The data is assumed to be in row major order
 /* At the end the distance matrix is as follows :
- *  [ distance(test1, train1)    distance(test2, train1)   distances(test3, train1) ...
- *   distance(test1, train2     ...
+ *  [ distance(train1, test1)    distance(train2, test1)   distances(train3, test1) ...
+ *   distance(train1, test2     ...
  *  ...																					]
  */
 void gpu_compute_distances(double *train_data, double *test_data, int n_train,
@@ -224,10 +224,7 @@ void gpu_compute_distance_withreduction(double* train_data, double* test_point, 
 	checkCudaErrors(cudaFree(d_point));
 }
 
-void test_distances_multiple() {
-	int n_train = 3;
-	int n_test = 4;
-	int dim = 2;
+void test_distances_multiple(int n_train, int n_test, int dim) {
 
 	double *train_data = new double[n_train * dim];
 	double *test_data = new double[n_test * dim];
@@ -235,10 +232,10 @@ void test_distances_multiple() {
 	array_fill(test_data, n_test * dim);
 
 	printf("\n-------- Printing the TRAIN data ---------\n");
-	print_vectors_in_row_major_order(train_data, n_train, dim);
+	//print_vectors_in_row_major_order(train_data, n_train, dim);
 
 	printf("\n-------- Printing the TEST data ---------\n");
-	print_vectors_in_row_major_order(test_data, n_test, dim);
+	//print_vectors_in_row_major_order(test_data, n_test, dim);
 
 	double *distances = new double[n_train * n_test];
 
@@ -246,7 +243,7 @@ void test_distances_multiple() {
 			distances);
 
 	printf("\n-------- Printing the DISTANCE matrix ---------\n");
-	print_vectors_in_row_major_order(distances, n_test, n_train);
+	//print_vectors_in_row_major_order(distances, n_test, n_train);
 }
 
 
