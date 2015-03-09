@@ -5,7 +5,6 @@
 #include <helper_cuda.h>
 #import "../utilities.h"
 
-
 __device__ void swap(double* data, int* indexes, int i, int j) {
 	double t = data[j];
 	data[j] = data[i];
@@ -15,7 +14,6 @@ __device__ void swap(double* data, int* indexes, int i, int j) {
 	indexes[j] = indexes[i];
 	indexes[i] = ti;
 }
-
 
 /*
  * Naive sort
@@ -107,12 +105,7 @@ __global__ void k_quicksort(double* data, int * indexes, int dim, int n) {
 	}
 }
 
-void gpu_quicksort(double * data, int n, int dim) {
-
-	int * indexes = new int[n*dim];
-	for (int i = 0; i < n; i++)
-		for(int j = 0; j < dim; j++)
-			indexes[i * dim + j] = j;
+void gpu_quicksort(double * data, int * indexes, int n, int dim) {
 
 	int datasize_double = dim * n * sizeof(double);
 	int datasize_int = dim * n * sizeof(int);
@@ -132,14 +125,12 @@ void gpu_quicksort(double * data, int n, int dim) {
 	dim3 dim_grid(1, n / nthreads + 1);
 	dim3 dim_block(1, nthreads);
 
-	printf("Nblock : %i \n", n / nthreads + 1);
+	//printf("Nblock : %i \n", n / nthreads + 1);
 
 	k_quicksort<<<dim_grid, dim_block>>>(d_data, d_indexes, dim, n);
 
 	checkCudaErrors(
 			cudaMemcpy(data, d_data, datasize_double, cudaMemcpyDeviceToHost));
-
-
 
 	checkCudaErrors(
 			cudaMemcpy(indexes, d_indexes, datasize_int, cudaMemcpyDeviceToHost));
@@ -147,8 +138,7 @@ void gpu_quicksort(double * data, int n, int dim) {
 	checkCudaErrors(cudaFree(d_data));
 	checkCudaErrors(cudaFree(d_indexes));
 
-	print_vectors_in_row_major_order(indexes, n, dim);
-	printf("hello");
+	//print_vectors_in_row_major_order(indexes, n, dim);
 }
 
 void gpu_quicksort_benchmark(double * data, int n, int dim) {
@@ -156,12 +146,18 @@ void gpu_quicksort_benchmark(double * data, int n, int dim) {
 	printf("Starting benchmark for gpu quicksort (array size = %i)\n", n);
 	printf("------------------------------------------\n");
 
+	int * indexes = (int*) malloc(n*dim*sizeof(int));
+
+	for (int i = 0; i < n; i++)
+		for(int j = 0; j < dim; j++)
+			indexes[i * dim + j] = j;
+
 	print_vectors_in_row_major_order(data, n, dim);
 	StopWatchInterface *timer = 0;
 	sdkCreateTimer(&timer);
 	sdkStartTimer(&timer);
 
-	gpu_quicksort(data, n, dim);
+	gpu_quicksort(data, indexes, n, dim);
 
 	sdkStopTimer(&timer);
 
@@ -181,4 +177,6 @@ void gpu_quicksort_benchmark(double * data, int n, int dim) {
 			}
 		}
 	}
+
+	free(indexes);
 }

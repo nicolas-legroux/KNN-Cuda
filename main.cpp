@@ -14,11 +14,11 @@ void test_distance(int n_train, int n_test, int dim) {
 
 int main() {
 
-	int k = 1;
-	int n_train = 10000;
+	int k = 200;
+	int n_train = 1000;
 	int n_labels = 2;
-	int n_test = 2000;
-	int dim = 400;
+	int n_test = 600;
+	int dim = 50;
 	double * train_data = new double[n_train * dim];
 	int * train_labels = new int[n_train];
 	double * test_data = new double[n_test * dim];
@@ -35,9 +35,9 @@ int main() {
 			n_labels, dim, k, knn_test_labels);
 	//array_print(real_test_labels, n_test);
 	//array_print(knn_test_labels, n_test);
-	gpu_knn_benchmark(train_data, test_data, train_labels, n_train, n_test,
+	gpu_knn_quicksort_benchmark(train_data, test_data, train_labels, n_train, n_test,
 			n_labels, dim, k, knn_test_labels);
 	//array_print(knn_test_labels, n_test);
 
-	printf("Finished without error.");
+	printf("\nFinished without error.");
 }

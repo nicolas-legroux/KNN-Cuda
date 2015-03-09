@@ -20,18 +20,12 @@ using namespace std;
 void cpu_knn(double * train_data, double * test_data, int * train_labels,
 		int n_train, int n_test, int n_labels, int dim, int k, int * knn_labels) {
 
-	double totaltimedistance = 0;
-
 	for(int i = 0; i < n_test; i++) {
 		double * lsdistance = new double[n_train];
 
-		clock_t start = clock();
 		for(int j = 0; j < n_train; j++) {
 			lsdistance[j] = distance(train_data, test_data, j, i, dim);
 		}
-
-		clock_t stop = clock();
-		totaltimedistance += (double)(stop - start)/CLOCKS_PER_SEC;
 
 		int * labelsCount = new int[n_labels];
 		for(int l = 0; l < n_labels; l++)
@@ -48,7 +42,6 @@ void cpu_knn(double * train_data, double * test_data, int * train_labels,
 		delete[] labelsCount;
 		delete[] lsdistance;
 	}
-	cout << "time CPU distance : " << totaltimedistance << endl;
 }
 
 void cpu_knn_benchmark(double * train_data, double * test_data, int * train_labels,
@@ -57,6 +50,7 @@ void cpu_knn_benchmark(double * train_data, double * test_data, int * train_labe
 	cpu_knn(train_data, test_data, train_labels, n_train, n_test, n_labels, dim, k, knn_labels);
 	clock_t stop = clock();
 
+	printf("\nResult of benchmark for CPU : \n");
 	print_elapsed(start, stop);
 }
 
