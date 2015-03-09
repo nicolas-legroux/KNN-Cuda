@@ -40,9 +40,9 @@ int main() {
 			n_labels, dim, k, knn_test_labels);
 	//array_print(real_test_labels, n_test);
 	//array_print(knn_test_labels, n_test);
-	gpu_knn_benchmark(train_data, test_data, train_labels, n_train, n_test,
+	gpu_knn_quicksort_benchmark(train_data, test_data, train_labels, n_train, n_test,
 			n_labels, dim, k, knn_test_labels);
 	//array_print(knn_test_labels, n_test);
 
-	printf("Finished without error.");
+	printf("\nFinished without error.");
 }
