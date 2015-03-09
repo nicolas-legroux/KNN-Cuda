@@ -4,6 +4,7 @@
 #include "Data/data_loader.h"
 #include "CPU/cpu_knn.h"
 #include "GPU/gpu_knn.h"
+#include "GPU/gpu_average.h"
 #include "GPU/extract_minimums.h"
 #include "GPU/compute_distances.h"
 #include "GPU/quicksort_sort_indexes.h"
@@ -28,7 +29,6 @@ void test1(){
 	array_fill_boolean(train_labels, n_train);
 	int * real_test_labels = new int[n_test];
 	int * knn_test_labels = new int[n_test];
-
 	//loadData("data.csv", train_labels, train_data, dim);
 	//loadData("test.csv", real_test_labels, test_data, dim);
 	cpu_knn_benchmark(train_data, test_data, train_labels, n_train, n_test,
