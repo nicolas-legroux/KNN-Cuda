@@ -4,42 +4,38 @@
 #include "Data/data_loader.h"
 #include "CPU/cpu_knn.h"
 #include "GPU/gpu_knn.h"
+#include "GPU/extract_minimums.h"
+#include "GPU/compute_distances.h"
 
-int main(){
+void test_distance(int n_train, int n_test, int dim) {
+	test_distances_multiple(n_train, n_test, dim);
+}
 
-	// TESTING MULTIPLE DISTANCE CALCULATION
-	//test_distances_multiple();
+int main() {
 
-	//TESTING MULTIPLE SORTING
-	//test_oddeven_sort_multiple(30, 3);
-
-	int k = 2000;
-
-	int n_train = 2000;
+	int k = 1;
+	int n_train = 10000;
 	int n_labels = 2;
-	int n_test = 1000;
-	int dim = 20;
-
-	double * train_data = new double[n_train*dim];
+	int n_test = 2000;
+	int dim = 400;
+	double * train_data = new double[n_train * dim];
 	int * train_labels = new int[n_train];
-	double * test_data = new double[n_test*dim];
-	array_fill(train_data, n_train*dim);
-	array_fill(test_data, n_test*dim);
+	double * test_data = new double[n_test * dim];
+	array_fill(train_data, n_train * dim);
+	array_fill(test_data, n_test * dim);
 	array_fill_boolean(train_labels, n_train);
-
 	int * real_test_labels = new int[n_test];
 	int * knn_test_labels = new int[n_test];
+//loadData("data.csv", train_labels, train_data, dim);
+//loadData("test.csv", real_test_labels, test_data, dim);
+	cpu_knn_benchmark(train_data, test_data, train_labels, n_train, n_test,
+			n_labels, dim, k, knn_test_labels);
+//array_print(real_test_labels, n_test);
+	//array_print(knn_test_labels, n_test);
+	gpu_knn_benchmark(train_data, test_data, train_labels, n_train, n_test,
+			n_labels, dim, k, knn_test_labels);
+	//array_print(knn_test_labels, n_test);
 
-	//loadData("data.csv", train_labels, train_data, dim);
-	//loadData("test.csv", real_test_labels, test_data, dim);
-
-	cpu_knn_benchmark(train_data, test_data, train_labels, n_train, n_test, n_labels, dim, k, knn_test_labels);
-
-	//array_print(real_test_labels, n_test);
-	array_print(knn_test_labels, n_test);
-
-	gpu_knn_benchmark(train_data, test_data, train_labels, n_train, n_test, n_labels, dim, k, knn_test_labels);
-
-	array_print(knn_test_labels, n_test);
+	printf("Finished without error.");
 
 }
