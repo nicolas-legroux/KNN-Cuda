@@ -13,10 +13,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void print_elapsed(clock_t start, clock_t stop)
+double print_elapsed(clock_t start, clock_t stop)
 {
 	double elapsed = ((double) (stop - start)) / CLOCKS_PER_SEC;
 	printf("Elapsed time: %.3fs\n", elapsed);
+	return elapsed;
 }
 
 double random_double() {

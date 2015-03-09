@@ -162,26 +162,21 @@ void oddeven_sort_indexes_multiple(double *distances, int * indexes,
 	dim3 dim_grid(dim_grid_x, dim_grid_y);
 	dim3 dim_block(dim_block_x, dim_block_y);
 
-	printf("Grid dimension is %d * %d\n", dim_grid_x, dim_grid_y);
-	printf("Block dimension is %d * %d\n", dim_block_x, dim_block_y);
+	//printf("Grid dimension is %d * %d\n", dim_grid_x, dim_grid_y);
+	//printf("Block dimension is %d * %d\n", dim_block_x, dim_block_y);
 
 	for (int i = 0; i < n_train; i++) {
-		printf("%d\n", i);
 		oddeven_step_multiple<<<dim_grid, dim_block>>>(d_distances, d_indexes,
 				n_train, n_test, i);
 		gpuErrchk( cudaPeekAtLastError());
 		gpuErrchk( cudaDeviceSynchronize());
 	}
 
-	printf("Done");
-
 	CudaSafeCall(
 			cudaMemcpy(indexes, d_indexes, indexes_size, cudaMemcpyDeviceToHost));
 
 	CudaSafeCall(cudaFree(d_distances));
 	CudaSafeCall(cudaFree(d_indexes));
-
-	printf("Done2");
 }
 
 void test_oddeven_sort(int DATA_SIZE) {
@@ -222,9 +217,9 @@ void test_oddeven_sort_multiple(int n_train, int n_test) {
 		indexes[n_train + i] = i;
 	}
 
-	printf("\n----- Printing the arrays to be sorted : -----\n");
+	//printf("\n----- Printing the arrays to be sorted : -----\n");
 	//print_vectors_in_row_major_order(distances, n_test, n_train);
-	printf("\n--------------------------------------------- \n");
+	//printf("\n--------------------------------------------- \n");
 
 	clock_t start = clock();
 
@@ -232,16 +227,12 @@ void test_oddeven_sort_multiple(int n_train, int n_test) {
 
 	clock_t stop = clock();
 
-	printf("\n----- Printing the sorted indexes ----- : \n");
+	//printf("\n----- Printing the sorted indexes ----- : \n");
 	//print_vectors_in_row_major_order(indexes, n_test, n_train);
-	printf("\n--------------------------------------------- \n");
+	//printf("\n--------------------------------------------- \n");
 
 	print_elapsed(start, stop);
-	printf("Done3\n");
 
 	delete[] distances;
-	printf("Done4\n");
-
-	printf("Done5\n");
 }
 

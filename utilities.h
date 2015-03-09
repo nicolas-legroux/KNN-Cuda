@@ -15,11 +15,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
-void print_elapsed(clock_t start, clock_t stop);
+double print_elapsed(clock_t start, clock_t stop);
 double random_double();
 void array_print(double *arr, int length);
 void array_print(int * arr, int length);
