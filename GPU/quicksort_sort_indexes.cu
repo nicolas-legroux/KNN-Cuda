@@ -139,8 +139,6 @@ void gpu_quicksort(double * data, int n, int dim) {
 	checkCudaErrors(
 			cudaMemcpy(data, d_data, datasize_double, cudaMemcpyDeviceToHost));
 
-
-
 	checkCudaErrors(
 			cudaMemcpy(indexes, d_indexes, datasize_int, cudaMemcpyDeviceToHost));
 
